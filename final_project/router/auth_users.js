@@ -29,7 +29,7 @@ regd_users.post("/login", (req,res) => {
   }
   if(authenticatedUser(username, password)){
       let accessToken = jwt.sign({
-          data: password 
+          data: username 
       }, 'access', {expiresIn: 60*60});
 
       req.session.authorization = {
@@ -47,13 +47,26 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
     let isbn = req.params.isbn;
     let review = req.query.review
     if(books[isbn]){
-        const existingReviews = books[bookId].reviews;
-    const newReviewId = Object.keys(existingReviews).length + 1;
-    existingReviews[newReviewId] = review;
+    const existingReviews = books[isbn].reviews;
+    const newReviewId = req.user.data;
+        existingReviews[newReviewId] = review
+
+    return res.status(200).json({'message': "The review for the book "+ isbn + " has been Added/updated."});
     }
+    else return res.status(208).json({'message': "Book not found with isbn" + isbn});
   //Write your code here
-  return res.status(300).json({message: "Yet to be implemented"});
 });
+
+regd_users.delete("/auth/review/:isbn", (req, res) => {
+    let isbn = req.params.isbn;
+    let review = req.query.review
+    if(books[isbn]){
+    const existingReviews = books[isbn].reviews;
+    delete existingReviews[req.user.data];
+    return res.status(200).json({'message': "Review for the  isbn"+ isbn + " Posted by user "+ req.user.data +" deleted."});
+    }
+    else return res.status(208).json({'message': "Book not found with isbn" + isbn});
+})
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
